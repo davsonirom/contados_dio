@@ -1,14 +1,47 @@
+import 'package:contatinhos/model/contatinho_model.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class HomePage extends StatelessWidget {
+import '../../mocado/contatinho_data.dart';
+import '../contato/contado_page.dart';
+import 'widgets/favorito_card.dart';
+
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  DadosMocadosContatinhos dados = DadosMocadosContatinhos();
+
+  List<ContatinhoModel> agendaDeFavoritos = [];
+
+  Future<void> meusContatinhos() async {
+    agendaDeFavoritos = await dados.meuContatos();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    meusContatinhos();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const FaIcon(
+          FontAwesomeIcons.addressBook,
+          color: Colors.orange,
+        ),
+      ),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.orange,
         title: const Text(
           'Contatinhos',
           style: TextStyle(
@@ -19,85 +52,58 @@ class HomePage extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Card(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(48),
-                bottomRight: Radius.circular(48),
-              ),
-            ),
-            elevation: 8,
-            child: Container(
-              width: 120,
-              height: 200,
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(48),
-                  bottomRight: Radius.circular(48),
-                ),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    right: -40,
-                    top: 20,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 8,
-                            color: Colors.black54,
-                            spreadRadius: 4,
-                            offset: Offset(4, 4),
-                          )
-                        ],
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: agendaDeFavoritos.length,
+                  itemBuilder: (_, index) {
+                    ContatinhoModel favorito = agendaDeFavoritos[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 8),
+                      child: FavoritoCard(
+                        apelido: favorito.apelido,
+                        nome: favorito.nome,
+                        telefone: favorito.telefone,
+                        avatar: favorito.avatar.toString(),
                       ),
-                      child: const CircleAvatar(
-                        maxRadius: 50,
-                        backgroundImage: AssetImage('assets/avatar.jpg'),
+                    );
+                  }),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              flex: 2,
+              child: ListView.builder(
+                itemCount: agendaDeFavoritos.length,
+                itemBuilder: (_, index) {
+                  ContatinhoModel contato = agendaDeFavoritos[index];
+                  return ListTile(
+                    iconColor: Colors.orange,
+                    leading: const FaIcon(FontAwesomeIcons.user),
+                    title: Text(
+                      contato.nome,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
                     ),
-                  ),
-                  const Positioned(
-                    bottom: 16,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
-                            child: Text(
-                              "Dyêgo",
-                              style: TextStyle(
-                                fontSize: 24,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            "99999-9999",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
+                    trailing: IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ContadoPage(
+                                  contato: contato,
+                                )));
+                      },
+                      icon: const FaIcon(FontAwesomeIcons.idCard),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
